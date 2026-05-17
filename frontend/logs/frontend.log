@@ -1,0 +1,22 @@
+
+> heritage-planner-frontend@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1665ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1966ms (701 modules)
+ HEAD / 200 in 2037ms
+ HEAD / 200 in 13ms
+ ○ Compiling /map ...
+ ✓ Compiled /map in 705ms (972 modules)
+ HEAD /map 200 in 810ms
+ ○ Compiling /plan ...
+ ✓ Compiled /plan in 1906ms (2359 modules)
+ HEAD /plan 200 in 2015ms
+ HEAD /plan 200 in 56ms
+ GET / 200 in 49ms

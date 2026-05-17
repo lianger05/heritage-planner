@@ -1,0 +1,127 @@
+version: "3.8"
+
+services:
+  # PostgreSQL + PostGIS
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: heritage-postgres
+    environment:
+      POSTGRES_USER: heritage
+      POSTGRES_PASSWORD: heritage123
+      POSTGRES_DB: heritage_planner
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data/seed/init_db.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./data/seed/kaifeng_heritage.sql:/docker-entrypoint-initdb.d/02-kaifeng.sql
+      - ./data/seed/regulations.sql:/docker-entrypoint-initdb.d/03-regulations.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U heritage -d heritage_planner"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Neo4j (Knowledge Graph)
+  neo4j:
+    image: neo4j:5.20-community
+    container_name: heritage-neo4j
+    environment:
+      NEO4J_AUTH: neo4j/heritage2024
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_server_memory_heap_max__size: 512M
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (Cache)
+  redis:
+    image: redis:7-alpine
+    container_name: heritage-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ChromaDB (Vector Store)
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: heritage-chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      ANONYMIZED_TELEMETRY: "FALSE"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8000/api/v1/heartbeat || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO (File Storage)
+  minio:
+    image: minio/minio:latest
+    container_name: heritage-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: heritage-backend
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://heritage:heritage123@postgres:5432/heritage_planner
+      REDIS_URL: redis://redis:6379/0
+      NEO4J_URI: bolt://neo4j:7687
+      CHROMA_HOST: chromadb
+      MINIO_ENDPOINT: minio:9000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:
+  neo4j_data:
+  redis_data:
+  chroma_data:
+  minio_data:

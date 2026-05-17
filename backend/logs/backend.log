@@ -1,0 +1,131 @@
+INFO:     Will watch for changes in these directories: ['C:\\Users\\Admin\\WorkBuddy\\2026-05-16-task-15\\backend']
+INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+INFO:     Started reloader process [36368] using WatchFiles
+INFO:     Started server process [36624]
+INFO:     Waiting for application startup.
+[古建文旅经济智能规划助手] v0.1.0 starting...
+  Environment: development
+2026-05-17 15:55:02,078 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2026-05-17 15:55:02,078 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("heritage")
+INFO:sqlalchemy.engine.Engine:PRAGMA main.table_info("heritage")
+2026-05-17 15:55:02,078 INFO sqlalchemy.engine.Engine [raw sql] ()
+INFO:sqlalchemy.engine.Engine:[raw sql] ()
+2026-05-17 15:55:02,078 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("plan")
+INFO:sqlalchemy.engine.Engine:PRAGMA main.table_info("plan")
+2026-05-17 15:55:02,078 INFO sqlalchemy.engine.Engine [raw sql] ()
+INFO:sqlalchemy.engine.Engine:[raw sql] ()
+2026-05-17 15:55:02,079 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("chat_session")
+INFO:sqlalchemy.engine.Engine:PRAGMA main.table_info("chat_session")
+2026-05-17 15:55:02,079 INFO sqlalchemy.engine.Engine [raw sql] ()
+INFO:sqlalchemy.engine.Engine:[raw sql] ()
+2026-05-17 15:55:02,079 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("regulation")
+INFO:sqlalchemy.engine.Engine:PRAGMA main.table_info("regulation")
+2026-05-17 15:55:02,079 INFO sqlalchemy.engine.Engine [raw sql] ()
+INFO:sqlalchemy.engine.Engine:[raw sql] ()
+2026-05-17 15:55:02,079 INFO sqlalchemy.engine.Engine COMMIT
+INFO:sqlalchemy.engine.Engine:COMMIT
+  Database initialized (SQLite)
+2026-05-17 15:55:02,080 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2026-05-17 15:55:02,084 INFO sqlalchemy.engine.Engine SELECT count(heritage.id) AS count_1 
+FROM heritage
+INFO:sqlalchemy.engine.Engine:SELECT count(heritage.id) AS count_1 
+FROM heritage
+2026-05-17 15:55:02,084 INFO sqlalchemy.engine.Engine [generated in 0.00008s] ()
+INFO:sqlalchemy.engine.Engine:[generated in 0.00008s] ()
+2026-05-17 15:55:02,085 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:sqlalchemy.engine.Engine:ROLLBACK
+INFO:     Application startup complete.
+  Seed data loaded
+  LLM Primary: deepseek/deepseek-chat
+2026-05-17 15:55:20,811 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2026-05-17 15:55:20,812 INFO sqlalchemy.engine.Engine SELECT count(heritage.id) AS count_1 
+FROM heritage
+INFO:sqlalchemy.engine.Engine:SELECT count(heritage.id) AS count_1 
+FROM heritage
+2026-05-17 15:55:20,812 INFO sqlalchemy.engine.Engine [cached since 18.73s ago] ()
+INFO:sqlalchemy.engine.Engine:[cached since 18.73s ago] ()
+2026-05-17 15:55:20,813 INFO sqlalchemy.engine.Engine SELECT heritage.id, heritage.name, heritage.alias, heritage.dynasty, heritage.year_start, heritage.year_end, heritage.building_type, heritage.style, heritage.protection_level, heritage.listed_date, heritage.listing_batch, heritage.province, heritage.city, heritage.district, heritage.address, heritage.longitude, heritage.latitude, heritage.description, heritage.current_status, heritage.area_size, heritage.is_open, heritage.ticket_price, heritage.annual_visitors, heritage.nearby_poi_count, heritage.nearby_hotel_count, heritage.extra_data, heritage.created_at, heritage.updated_at 
+FROM heritage ORDER BY heritage.id
+ LIMIT ? OFFSET ?
+INFO:sqlalchemy.engine.Engine:SELECT heritage.id, heritage.name, heritage.alias, heritage.dynasty, heritage.year_start, heritage.year_end, heritage.building_type, heritage.style, heritage.protection_level, heritage.listed_date, heritage.listing_batch, heritage.province, heritage.city, heritage.district, heritage.address, heritage.longitude, heritage.latitude, heritage.description, heritage.current_status, heritage.area_size, heritage.is_open, heritage.ticket_price, heritage.annual_visitors, heritage.nearby_poi_count, heritage.nearby_hotel_count, heritage.extra_data, heritage.created_at, heritage.updated_at 
+FROM heritage ORDER BY heritage.id
+ LIMIT ? OFFSET ?
+2026-05-17 15:55:20,813 INFO sqlalchemy.engine.Engine [generated in 0.00016s] (20, 0)
+INFO:sqlalchemy.engine.Engine:[generated in 0.00016s] (20, 0)
+INFO:     127.0.0.1:14271 - "GET /api/v1/heritage/ HTTP/1.1" 200 OK
+2026-05-17 15:55:20,815 INFO sqlalchemy.engine.Engine COMMIT
+INFO:sqlalchemy.engine.Engine:COMMIT
+INFO:     127.0.0.1:14328 - "POST /api/v1/plan/generate HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:14334 - "POST /api/v1/plan/generate HTTP/1.1" 400 Bad Request
+2026-05-17 15:56:46,924 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2026-05-17 15:56:46,925 INFO sqlalchemy.engine.Engine SELECT heritage.id, heritage.name, heritage.alias, heritage.dynasty, heritage.year_start, heritage.year_end, heritage.building_type, heritage.style, heritage.protection_level, heritage.listed_date, heritage.listing_batch, heritage.province, heritage.city, heritage.district, heritage.address, heritage.longitude, heritage.latitude, heritage.description, heritage.current_status, heritage.area_size, heritage.is_open, heritage.ticket_price, heritage.annual_visitors, heritage.nearby_poi_count, heritage.nearby_hotel_count, heritage.extra_data, heritage.created_at, heritage.updated_at 
+FROM heritage 
+WHERE heritage.id = ?
+INFO:sqlalchemy.engine.Engine:SELECT heritage.id, heritage.name, heritage.alias, heritage.dynasty, heritage.year_start, heritage.year_end, heritage.building_type, heritage.style, heritage.protection_level, heritage.listed_date, heritage.listing_batch, heritage.province, heritage.city, heritage.district, heritage.address, heritage.longitude, heritage.latitude, heritage.description, heritage.current_status, heritage.area_size, heritage.is_open, heritage.ticket_price, heritage.annual_visitors, heritage.nearby_poi_count, heritage.nearby_hotel_count, heritage.extra_data, heritage.created_at, heritage.updated_at 
+FROM heritage 
+WHERE heritage.id = ?
+2026-05-17 15:56:46,925 INFO sqlalchemy.engine.Engine [generated in 0.00010s] (5,)
+INFO:sqlalchemy.engine.Engine:[generated in 0.00010s] (5,)
+INFO:app.services.rag_service:ChromaDB initialized at ./data/chroma_db
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-17 15:57:04,518 INFO sqlalchemy.engine.Engine INSERT INTO "plan" (heritage_id, title, description, protection_measures, tourism_routes, business_layout, economic_estimation, constraints_check, llm_model, llm_tokens, generation_time, version, is_active, quality_score, feedback, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INFO:sqlalchemy.engine.Engine:INSERT INTO "plan" (heritage_id, title, description, protection_measures, tourism_routes, business_layout, economic_estimation, constraints_check, llm_model, llm_tokens, generation_time, version, is_active, quality_score, feedback, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-05-17 15:57:04,518 INFO sqlalchemy.engine.Engine [generated in 0.00024s] (5, '山陕甘会馆保护性开发方案', None, '{"core_zone": "\\u4e25\\u683c\\u4fdd\\u6301\\u539f\\u72b6\\uff0c\\u7981\\u6b62\\u65b0\\u589e\\u5efa\\u8bbe\\u9879\\u76ee\\uff0c\\u73b0\\u6709\\u5efa\ ... (1195 characters truncated) ... \\u5ba2\\u6d41\\u91cf\\u3001\\u7ed3\\u6784\\u4f4d\\u79fb\\u3001\\u73af\\u5883\\u53c2\\u6570\\uff0c\\u8bbe\\u5b9a\\u9884\\u8b66\\u9608\\u503c\\u3002"}', '{"main_route": {"description": "\\u4ece\\u5165\\u53e3\\u6cbf\\u4e2d\\u8f74\\u7ebf\\u53c2\\u89c2\\uff0c\\u4f9d\\u6b21\\u6e38\\u89c8\\u7167\\u58c1\\u30 ... (1404 characters truncated) ... \\u79df\\u8d41\\uff0c\\u4e3b\\u8981\\u53c2\\u89c2\\u533a\\u57df\\u94fa\\u8bbe\\u76f2\\u9053\\uff0c\\u914d\\u5907\\u8bed\\u97f3\\u5bfc\\u89c8\\u3002"}', '{"cultural_creative": {"description": "\\u5f00\\u53d1\\u4ee5\\u4f1a\\u9986\\u7816\\u96d5\\u3001\\u6728\\u96d5\\u3001\\u77f3\\u96d5\\u4e3a\\u4e3b\\u98 ... (1523 characters truncated) ... u5587\\u53ed\\u7b49\\u566a\\u58f0\\u6d3b\\u52a8", "\\u6e38\\u4e50\\u8bbe\\u65bd", "\\u5546\\u4e1a\\u6444\\u5f71\\uff08\\u9700\\u5ba1\\u6279\\uff09"]}', '{"investment": {"amount": "500", "breakdown": {"\\u57fa\\u7840\\u8bbe\\u65bd\\u5efa\\u8bbe": 100, "\\u4fee\\u7f2e\\u5de5\\u7a0b": 200, "\\u914d\\u595 ... (536 characters truncated) ... \u7ef4\\u630125\\u5143", "\\u6587\\u521b\\u4ea7\\u54c1\\u4eba\\u5747\\u6d88\\u8d3915\\u5143", "\\u9910\\u996e\\u4eba\\u5747\\u6d88\\u8d3920\\u5143"]}', '{"violations": [], "warnings": ["\\u7ecf\\u6d4e\\u4f30\\u7b97\\u4e2d\\u6295\\u8d44\\u91d1\\u989d500\\u4e07\\u5143\\u672a\\u660e\\u786e\\u5355\\u4f4d\ ... (253 characters truncated) ... ", "\\u65e0\\u969c\\u788d\\u8bbe\\u65bd\\u53ef\\u80fd\\u5f71\\u54cd\\u6587\\u7269\\u539f\\u72b6\\uff0c\\u9700\\u8bc4\\u4f30\\u3002"], "passed": true}', 'deepseek-chat', None, 16.95, 1, 1, None, None, '2026-05-17 07:57:04.518000', '2026-05-17 07:57:04.518003')
+INFO:sqlalchemy.engine.Engine:[generated in 0.00024s] (5, '山陕甘会馆保护性开发方案', None, '{"core_zone": "\\u4e25\\u683c\\u4fdd\\u6301\\u539f\\u72b6\\uff0c\\u7981\\u6b62\\u65b0\\u589e\\u5efa\\u8bbe\\u9879\\u76ee\\uff0c\\u73b0\\u6709\\u5efa\ ... (1195 characters truncated) ... \\u5ba2\\u6d41\\u91cf\\u3001\\u7ed3\\u6784\\u4f4d\\u79fb\\u3001\\u73af\\u5883\\u53c2\\u6570\\uff0c\\u8bbe\\u5b9a\\u9884\\u8b66\\u9608\\u503c\\u3002"}', '{"main_route": {"description": "\\u4ece\\u5165\\u53e3\\u6cbf\\u4e2d\\u8f74\\u7ebf\\u53c2\\u89c2\\uff0c\\u4f9d\\u6b21\\u6e38\\u89c8\\u7167\\u58c1\\u30 ... (1404 characters truncated) ... \\u79df\\u8d41\\uff0c\\u4e3b\\u8981\\u53c2\\u89c2\\u533a\\u57df\\u94fa\\u8bbe\\u76f2\\u9053\\uff0c\\u914d\\u5907\\u8bed\\u97f3\\u5bfc\\u89c8\\u3002"}', '{"cultural_creative": {"description": "\\u5f00\\u53d1\\u4ee5\\u4f1a\\u9986\\u7816\\u96d5\\u3001\\u6728\\u96d5\\u3001\\u77f3\\u96d5\\u4e3a\\u4e3b\\u98 ... (1523 characters truncated) ... u5587\\u53ed\\u7b49\\u566a\\u58f0\\u6d3b\\u52a8", "\\u6e38\\u4e50\\u8bbe\\u65bd", "\\u5546\\u4e1a\\u6444\\u5f71\\uff08\\u9700\\u5ba1\\u6279\\uff09"]}', '{"investment": {"amount": "500", "breakdown": {"\\u57fa\\u7840\\u8bbe\\u65bd\\u5efa\\u8bbe": 100, "\\u4fee\\u7f2e\\u5de5\\u7a0b": 200, "\\u914d\\u595 ... (536 characters truncated) ... \u7ef4\\u630125\\u5143", "\\u6587\\u521b\\u4ea7\\u54c1\\u4eba\\u5747\\u6d88\\u8d3915\\u5143", "\\u9910\\u996e\\u4eba\\u5747\\u6d88\\u8d3920\\u5143"]}', '{"violations": [], "warnings": ["\\u7ecf\\u6d4e\\u4f30\\u7b97\\u4e2d\\u6295\\u8d44\\u91d1\\u989d500\\u4e07\\u5143\\u672a\\u660e\\u786e\\u5355\\u4f4d\ ... (253 characters truncated) ... ", "\\u65e0\\u969c\\u788d\\u8bbe\\u65bd\\u53ef\\u80fd\\u5f71\\u54cd\\u6587\\u7269\\u539f\\u72b6\\uff0c\\u9700\\u8bc4\\u4f30\\u3002"], "passed": true}', 'deepseek-chat', None, 16.95, 1, 1, None, None, '2026-05-17 07:57:04.518000', '2026-05-17 07:57:04.518003')
+2026-05-17 15:57:04,529 INFO sqlalchemy.engine.Engine SELECT "plan".id, "plan".heritage_id, "plan".title, "plan".description, "plan".protection_measures, "plan".tourism_routes, "plan".business_layout, "plan".economic_estimation, "plan".constraints_check, "plan".llm_model, "plan".llm_tokens, "plan".generation_time, "plan".version, "plan".is_active, "plan".quality_score, "plan".feedback, "plan".created_at, "plan".updated_at 
+FROM "plan" 
+WHERE "plan".id = ?
+INFO:sqlalchemy.engine.Engine:SELECT "plan".id, "plan".heritage_id, "plan".title, "plan".description, "plan".protection_measures, "plan".tourism_routes, "plan".business_layout, "plan".economic_estimation, "plan".constraints_check, "plan".llm_model, "plan".llm_tokens, "plan".generation_time, "plan".version, "plan".is_active, "plan".quality_score, "plan".feedback, "plan".created_at, "plan".updated_at 
+FROM "plan" 
+WHERE "plan".id = ?
+2026-05-17 15:57:04,529 INFO sqlalchemy.engine.Engine [generated in 0.00012s] (7,)
+INFO:sqlalchemy.engine.Engine:[generated in 0.00012s] (7,)
+INFO:     127.0.0.1:14373 - "POST /api/v1/plan/generate HTTP/1.1" 200 OK
+2026-05-17 15:57:04,531 INFO sqlalchemy.engine.Engine COMMIT
+INFO:sqlalchemy.engine.Engine:COMMIT
+2026-05-17 16:10:39,341 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2026-05-17 16:10:39,342 INFO sqlalchemy.engine.Engine SELECT count(heritage.id) AS count_1 
+FROM heritage
+INFO:sqlalchemy.engine.Engine:SELECT count(heritage.id) AS count_1 
+FROM heritage
+2026-05-17 16:10:39,342 INFO sqlalchemy.engine.Engine [cached since 937.3s ago] ()
+INFO:sqlalchemy.engine.Engine:[cached since 937.3s ago] ()
+2026-05-17 16:10:39,343 INFO sqlalchemy.engine.Engine SELECT heritage.id, heritage.name, heritage.alias, heritage.dynasty, heritage.year_start, heritage.year_end, heritage.building_type, heritage.style, heritage.protection_level, heritage.listed_date, heritage.listing_batch, heritage.province, heritage.city, heritage.district, heritage.address, heritage.longitude, heritage.latitude, heritage.description, heritage.current_status, heritage.area_size, heritage.is_open, heritage.ticket_price, heritage.annual_visitors, heritage.nearby_poi_count, heritage.nearby_hotel_count, heritage.extra_data, heritage.created_at, heritage.updated_at 
+FROM heritage ORDER BY heritage.id
+ LIMIT ? OFFSET ?
+INFO:sqlalchemy.engine.Engine:SELECT heritage.id, heritage.name, heritage.alias, heritage.dynasty, heritage.year_start, heritage.year_end, heritage.building_type, heritage.style, heritage.protection_level, heritage.listed_date, heritage.listing_batch, heritage.province, heritage.city, heritage.district, heritage.address, heritage.longitude, heritage.latitude, heritage.description, heritage.current_status, heritage.area_size, heritage.is_open, heritage.ticket_price, heritage.annual_visitors, heritage.nearby_poi_count, heritage.nearby_hotel_count, heritage.extra_data, heritage.created_at, heritage.updated_at 
+FROM heritage ORDER BY heritage.id
+ LIMIT ? OFFSET ?
+2026-05-17 16:10:39,343 INFO sqlalchemy.engine.Engine [cached since 918.5s ago] (20, 0)
+INFO:sqlalchemy.engine.Engine:[cached since 918.5s ago] (20, 0)
+INFO:     127.0.0.1:3314 - "GET /api/v1/heritage/ HTTP/1.1" 200 OK
+2026-05-17 16:10:39,344 INFO sqlalchemy.engine.Engine COMMIT
+INFO:sqlalchemy.engine.Engine:COMMIT
+2026-05-17 16:12:02,925 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2026-05-17 16:12:02,925 INFO sqlalchemy.engine.Engine SELECT count(heritage.id) AS count_1 
+FROM heritage
+INFO:sqlalchemy.engine.Engine:SELECT count(heritage.id) AS count_1 
+FROM heritage
+2026-05-17 16:12:02,925 INFO sqlalchemy.engine.Engine [cached since 1021s ago] ()
+INFO:sqlalchemy.engine.Engine:[cached since 1021s ago] ()
+2026-05-17 16:12:02,926 INFO sqlalchemy.engine.Engine SELECT heritage.id, heritage.name, heritage.alias, heritage.dynasty, heritage.year_start, heritage.year_end, heritage.building_type, heritage.style, heritage.protection_level, heritage.listed_date, heritage.listing_batch, heritage.province, heritage.city, heritage.district, heritage.address, heritage.longitude, heritage.latitude, heritage.description, heritage.current_status, heritage.area_size, heritage.is_open, heritage.ticket_price, heritage.annual_visitors, heritage.nearby_poi_count, heritage.nearby_hotel_count, heritage.extra_data, heritage.created_at, heritage.updated_at 
+FROM heritage ORDER BY heritage.id
+ LIMIT ? OFFSET ?
+INFO:sqlalchemy.engine.Engine:SELECT heritage.id, heritage.name, heritage.alias, heritage.dynasty, heritage.year_start, heritage.year_end, heritage.building_type, heritage.style, heritage.protection_level, heritage.listed_date, heritage.listing_batch, heritage.province, heritage.city, heritage.district, heritage.address, heritage.longitude, heritage.latitude, heritage.description, heritage.current_status, heritage.area_size, heritage.is_open, heritage.ticket_price, heritage.annual_visitors, heritage.nearby_poi_count, heritage.nearby_hotel_count, heritage.extra_data, heritage.created_at, heritage.updated_at 
+FROM heritage ORDER BY heritage.id
+ LIMIT ? OFFSET ?
+2026-05-17 16:12:02,926 INFO sqlalchemy.engine.Engine [cached since 1002s ago] (20, 0)
+INFO:sqlalchemy.engine.Engine:[cached since 1002s ago] (20, 0)
+INFO:     127.0.0.1:12240 - "GET /api/v1/heritage/ HTTP/1.1" 200 OK
+2026-05-17 16:12:02,927 INFO sqlalchemy.engine.Engine COMMIT
+INFO:sqlalchemy.engine.Engine:COMMIT
+INFO:     127.0.0.1:12126 - "GET /api/v1/heritage?page_size=2 HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:12131 - "GET /api/v1/heritage?page_size=2 HTTP/1.1" 307 Temporary Redirect
+WARNING:  WatchFiles detected changes in 'app\main.py'. Reloading...

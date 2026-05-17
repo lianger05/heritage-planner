@@ -1,0 +1,31 @@
+# Render.com 部署配置 - 后端服务
+services:
+  - type: web
+    name: heritage-planner-api
+    env: python
+    region: singapore  # 新加坡节点，离中国最近
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./data/heritage_planner.db
+      - key: DATABASE_URL_SYNC
+        value: sqlite:///./data/heritage_planner.db
+      - key: CHROMA_MODE
+        value: persistent
+      - key: CHROMA_PERSIST_DIR
+        value: ./data/chroma_db
+      - key: REDIS_ENABLED
+        value: "false"
+      - key: NEO4J_ENABLED
+        value: "false"
+      - key: LLM_CACHE_ENABLED
+        value: "false"
+      # 敏感变量（API Key）在 Render Dashboard 中手动设置，不写入文件
