@@ -107,11 +107,10 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
 
-    # CORS — allow_credentials=False 才能与通配符 "*" 共存
-    origins = [o.strip() for o in settings.cors_origins.split(",")]
+    # CORS — allow_credentials=False 时可以用通配符 "*"
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=origins,
+        allow_origins=["*"],
         allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
