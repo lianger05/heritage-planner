@@ -11,14 +11,13 @@ const nextConfig = {
     NEXT_PUBLIC_AMAP_SECRET: process.env.NEXT_PUBLIC_AMAP_SECRET || "",
   },
   async rewrites() {
-    // 生产环境不需要代理，前端直接调用 Render 后端
-    if (process.env.NODE_ENV === "production") return [];
-    // 开发环境：将 /api/v1 代理到本地后端
+    // 使用 Vercel rewrites 代理后端请求，避免浏览器直连 Render 被 DNS 污染/网络不通
+    const renderUrl =
+      process.env.RENDER_BACKEND_URL || "https://heritage-planner.onrender.com";
     return [
       {
         source: "/api/v1/:path*",
-        // 尾部斜杠匹配 FastAPI 路由，避免 307 重定向
-        destination: "http://localhost:8080/api/v1/:path*/",
+        destination: `${renderUrl}/api/v1/:path*/`,
       },
     ];
   },

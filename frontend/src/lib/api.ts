@@ -2,15 +2,12 @@ import axios, { type AxiosError } from "axios";
 
 // 判断运行环境，选择正确的后端地址
 function getApiBase(): string {
-  // 优先使用显式设置的环境变量
+  // 优先使用显式设置的环境变量（仅当以 http 开头时才直连）
   if (process.env.NEXT_PUBLIC_API_URL?.startsWith("http")) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
-  // 浏览器端：非本地环境直接指向 Render 后端
-  if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
-    return "https://heritage-planner.onrender.com/api/v1";
-  }
-  // 本地开发：走 Next.js rewrites 代理
+  // 浏览器端 & 服务端统一使用 /api/v1，由 Next.js rewrites 代理到后端
+  // 这样前端无需直连 Render，避免 DNS 污染和网络不通的问题
   return "/api/v1";
 }
 
