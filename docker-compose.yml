@@ -6,9 +6,9 @@ services:
     image: postgis/postgis:16-3.4
     container_name: heritage-postgres
     environment:
-      POSTGRES_USER: heritage
-      POSTGRES_PASSWORD: heritage123
-      POSTGRES_DB: heritage_planner
+      POSTGRES_USER: ${POSTGRES_USER:-heritage}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD not set}
+      POSTGRES_DB: ${POSTGRES_DB:-heritage_planner}
     ports:
       - "5432:5432"
     volumes:
@@ -27,7 +27,7 @@ services:
     image: neo4j:5.20-community
     container_name: heritage-neo4j
     environment:
-      NEO4J_AUTH: neo4j/heritage2024
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:?NEO4J_PASSWORD not set}
       NEO4J_PLUGINS: '["apoc"]'
       NEO4J_server_memory_heap_max__size: 512M
     ports:
@@ -77,8 +77,8 @@ services:
     container_name: heritage-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD not set}
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -90,6 +90,19 @@ services:
       timeout: 5s
       retries: 5
 
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: heritage-frontend
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
   # Backend API
   backend:
     build:
@@ -99,13 +112,13 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://heritage:heritage123@postgres:5432/heritage_planner
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-heritage}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-heritage_planner}
       REDIS_URL: redis://redis:6379/0
       NEO4J_URI: bolt://neo4j:7687
       CHROMA_HOST: chromadb
       MINIO_ENDPOINT: minio:9000
     ports:
-      - "8000:8000"
+      - "8001:8000"
     depends_on:
       postgres:
         condition: service_healthy

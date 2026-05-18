@@ -43,8 +43,10 @@ async def list_heritage(
         query = query.where(Heritage.building_type == building_type)
         count_query = count_query.where(Heritage.building_type == building_type)
     if keyword:
-        query = query.where(Heritage.name.ilike(f"%{keyword}%"))
-        count_query = count_query.where(Heritage.name.ilike(f"%{keyword}%"))
+        # 转义 LIKE 通配符，防止用户输入 % 或 _ 干扰查询
+        escaped_keyword = keyword.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        query = query.where(Heritage.name.ilike(f"%{escaped_keyword}%", escape="\\"))
+        count_query = count_query.where(Heritage.name.ilike(f"%{escaped_keyword}%", escape="\\"))
 
     total_result = await db.execute(count_query)
     total = total_result.scalar() or 0

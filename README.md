@@ -138,6 +138,26 @@ asyncio.run(kg.close())
 | `/api/v1/map/markers` | POST | 获取地图标记 |
 | `/api/v1/report/generate` | POST | 导出方案报告 |
 
+## 前端环境变量配置
+
+前端依赖以下环境变量（复制 `frontend/.env.example` 为 `frontend/.env.local`）：
+
+| 变量 | 必需 | 说明 |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | 否 | 后端 API 地址，本地开发留空走代理 |
+| `NEXT_PUBLIC_AMAP_KEY` | 是 | 高德地图 JS API Key |
+| `NEXT_PUBLIC_AMAP_SECRET` | 是 | 高德地图安全密钥（数字签名） |
+
+### 高德地图 Key 安全配置
+
+1. 前往 [高德开放平台控制台](https://console.amap.com/dev/key/app) 创建应用
+2. 应用类型选择 **"Web端(JS API)"**
+3. 在 Key 设置中配置 **HTTP Referer 白名单**：
+   - 开发：`localhost:3000, 127.0.0.1:3000`
+   - 生产：`heritage-planner.vercel.app`（替换为实际域名）
+4. 获取 Key 和安全密钥（Security Code），填入 `frontend/.env.local`
+5. **不要将 Key 提交到 Git 仓库**（已在 .gitignore 中忽略 .env.local）
+
 ## 开发指南
 
 详见 [ARCHITECTURE.md](./docs/ARCHITECTURE.md)

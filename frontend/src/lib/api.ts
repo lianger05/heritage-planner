@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type AxiosError } from "axios";
 
 // 判断运行环境，选择正确的后端地址
 function getApiBase(): string {
@@ -16,12 +16,97 @@ function getApiBase(): string {
 
 const API_BASE = getApiBase();
 
+// API Key：如果后端启用了认证，前端需要提供 X-API-Key
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
+
+// 公共请求头
+function getHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (API_KEY) {
+    headers["X-API-Key"] = API_KEY;
+  }
+  return headers;
+}
+
+// 超时配置（毫秒）
+const DEFAULT_TIMEOUT = 60000; // 普通请求
+const AI_TIMEOUT = 180000; // AI 生成请求（DeepSeek/Qwen 可能需要较长时间）
+
 export const api = axios.create({
   baseURL: API_BASE,
-  timeout: 60000,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  timeout: DEFAULT_TIMEOUT,
+  headers: getHeaders(),
+});
+
+// ---- 响应拦截器：统一错误处理 ----
+
+api.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.code === "ECONNABORTED") {
+      // 超时错误
+      console.error(`[API] 请求超时 (${error.config?.url})`);
+      return Promise.reject(
+        new Error("请求超时，请检查网络连接后重试", { cause: error })
+      );
+    }
+    if (!error.response) {
+      // 网络错误（无响应）
+      console.error(`[API] 网络错误 (${error.config?.url}):`, error.message);
+      return Promise.reject(
+        new Error("网络连接失败，请检查后端服务是否正常运行", { cause: error })
+      );
+    }
+    // 服务端返回错误，保持原始错误以便上层捕获
+    return Promise.reject(error);
+  }
+);
+
+// ---- 重试策略 ----
+
+/**
+ * 对 GET 请求进行有限次数重试（处理瞬时网络故障）
+ * 写操作（POST/PUT/DELETE）不自动重试，避免重复操作
+ */
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const config = error.config;
+    if (!config) return Promise.reject(error);
+
+    // 仅对网络错误和 5xx 进行重试，且仅限 GET 请求
+    const shouldRetry =
+      (error.code === "ECONNABORTED" || !error.response || (error.response?.status ?? 0) >= 500) &&
+      (config.method?.toUpperCase() === "GET");
+
+    if (!shouldRetry) return Promise.reject(error);
+
+    // 限制最大重试次数
+    const maxRetries = 2;
+    const retryCount = (config as typeof config & { __retryCount?: number }).__retryCount || 0;
+    if (retryCount >= maxRetries) {
+      console.error(`[API] 已达最大重试次数 (${config.url})`);
+      return Promise.reject(error);
+    }
+
+    (config as typeof config & { __retryCount: number }).__retryCount = retryCount + 1;
+
+    // 指数退避：1s, 2s
+    const delay = Math.pow(2, retryCount) * 1000;
+    console.warn(`[API] 第 ${retryCount + 1} 次重试 (${config.url})，等待 ${delay}ms...`);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+
+    return api.request(config);
+  }
+);
+
+// 为 AI 生成请求提供更长超时的 axios 实例
+export const aiApi = axios.create({
+  baseURL: API_BASE,
+  timeout: AI_TIMEOUT,
+  headers: getHeaders(),
 });
 
 // ===== Heritage =====
@@ -120,7 +205,7 @@ export async function getPlansByHeritage(heritageId: number): Promise<PlanItem[]
 }
 
 export async function refinePlan(planId: number, feedback: string): Promise<PlanItem> {
-  const { data } = await api.post(`/plan/${planId}/refine`, null, { params: { feedback } });
+  const { data } = await api.post(`/plan/${planId}/refine`, { feedback });
   return data;
 }
 

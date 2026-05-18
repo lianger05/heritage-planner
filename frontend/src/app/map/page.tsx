@@ -17,6 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingListItem } from "@/components/ui/loading-card";
+import { Layers } from "lucide-react";
+
+// 高德地图图层类型
+type MapLayerType = "standard" | "satellite";
 
 // 高德地图类型声明
 interface AMapInstance {
@@ -29,6 +33,7 @@ interface AMapInstance {
   on: (event: string, cb: () => void) => void;
   getCenter: () => { lng: number; lat: number };
   setFitView: () => void;
+  setLayers: (layers: unknown[]) => void;
 }
 
 interface AMapMarkerInstance {
@@ -40,6 +45,7 @@ export default function MapPage() {
   const [markers, setMarkers] = useState<MapMarker[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [layerType, setLayerType] = useState<MapLayerType>("standard");
   const [filter, setFilter] = useState({
     province: "河南",
     city: "开封",
@@ -135,6 +141,29 @@ export default function MapPage() {
       }
     };
   }, []);
+
+  // 地图图层切换 (标准/卫星)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const AMap = (window as any).AMap;
+    if (!AMap?.TileLayer) return;
+
+    try {
+      if (layerType === "satellite") {
+        map.setLayers([
+          new AMap.TileLayer.Satellite(),
+          new AMap.TileLayer.RoadNet(),
+        ]);
+      } else {
+        map.setLayers([new AMap.TileLayer()]);
+      }
+    } catch (_e) {
+      // setLayers 在一些 AMap 版本中可能不可用，静默降级
+    }
+  }, [layerType, mapLoaded]);
 
   // 标记点渲染
   useEffect(() => {
@@ -338,6 +367,30 @@ export default function MapPage() {
 
       {/* 地图区域 */}
       <div className="flex-1 relative">
+        {/* 图层切换按钮 */}
+        {mapLoaded && (
+          <div className="absolute top-3 right-3 z-10 bg-white rounded-lg shadow-md p-1 flex gap-1">
+            <Button
+              variant={layerType === "standard" ? "default" : "ghost"}
+              size="sm"
+              className="h-8 text-xs"
+              onClick={() => setLayerType("standard")}
+            >
+              <Layers className="h-3 w-3 mr-1" />
+              标准
+            </Button>
+            <Button
+              variant={layerType === "satellite" ? "default" : "ghost"}
+              size="sm"
+              className="h-8 text-xs"
+              onClick={() => setLayerType("satellite")}
+            >
+              <Layers className="h-3 w-3 mr-1" />
+              卫星
+            </Button>
+          </div>
+        )}
+
         {!mapLoaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/30 z-10">
             <div className="text-center space-y-2 text-muted-foreground">

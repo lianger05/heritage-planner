@@ -15,8 +15,9 @@ class Settings(BaseSettings):
     app_debug: bool = True
     app_name: str = "古建文旅经济智能规划助手"
     app_version: str = "0.1.0"
-    app_secret_key: str = "change-this-in-production"
+    app_secret_key: str = ""  # 生产环境必须设置，否则启动时警告
     cors_origins: str = "http://localhost:3000"
+    api_key: str = ""  # 生产环境建议设置，开发环境留空跳过认证
 
     # Database - 本地开发用 SQLite
     database_url: str = "sqlite+aiosqlite:///./data/heritage_planner.db"
@@ -44,7 +45,7 @@ class Settings(BaseSettings):
     # Neo4j (可选，本地开发跳过)
     neo4j_uri: str = "bolt://localhost:7687"
     neo4j_user: str = "neo4j"
-    neo4j_password: str = "heritage2024"
+    neo4j_password: str = ""  # 生产环境必须设置
     neo4j_enabled: bool = False
 
     # ChromaDB (可选，本地用嵌入式)
@@ -57,8 +58,8 @@ class Settings(BaseSettings):
 
     # MinIO (可选)
     minio_endpoint: str = "localhost:9000"
-    minio_access_key: str = "minioadmin"
-    minio_secret_key: str = "minioadmin"
+    minio_access_key: str = ""  # 生产环境必须设置
+    minio_secret_key: str = ""  # 生产环境必须设置
     minio_bucket: str = "heritage-planner"
 
     # Amap
@@ -75,6 +76,20 @@ class Settings(BaseSettings):
     plan_max_tokens: int = 4096
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
+
+    def check_production_secrets(self) -> list[str]:
+        """检查生产环境缺失的关键配置，返回警告列表"""
+        warnings = []
+        if self.app_env == "production":
+            if not self.app_secret_key:
+                warnings.append("APP_SECRET_KEY 未设置")
+            if not self.api_key:
+                warnings.append("API_KEY 未设置（写操作无认证保护）")
+            if self.neo4j_enabled and not self.neo4j_password:
+                warnings.append("NEO4J_PASSWORD 未设置但 Neo4j 已启用")
+            if not self.deepseek_api_key and not self.qwen_api_key and not self.openai_api_key:
+                warnings.append("未配置任何 LLM API Key，AI 功能不可用")
+        return warnings
 
 
 @lru_cache

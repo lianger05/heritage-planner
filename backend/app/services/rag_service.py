@@ -6,6 +6,7 @@ import os
 from typing import Optional
 
 from app.core.config import get_settings
+from app.core.sanitize import safe_json_for_prompt
 from app.services.llm_service import LLMService
 
 settings = get_settings()
@@ -141,7 +142,7 @@ class RAGService:
     ) -> dict:
         """校验方案是否违反法规约束"""
         if not self.llm.is_available:
-            return {"violations": [], "warnings": ["LLM不可用，无法进行约束校验"], "passed": True}
+            return {"violations": [], "warnings": ["LLM不可用，无法进行约束校验"], "passed": False}
 
         # 1. 检索相关法规
         protection_level = heritage_info.get("protection_level", "")
@@ -168,9 +169,9 @@ class RAGService:
             {
                 "role": "user",
                 "content": (
-                    f"## 古建信息\n{json.dumps(heritage_info, ensure_ascii=False, indent=2)}\n\n"
+                    f"## 古建信息\n{safe_json_for_prompt(heritage_info)}\n\n"
                     f"## 相关法规\n{reg_text or '暂无检索到相关法规'}\n\n"
-                    f"## 规划方案\n{json.dumps(plan_content, ensure_ascii=False, indent=2)}\n\n"
+                    f"## 规划方案\n{safe_json_for_prompt(plan_content)}\n\n"
                     "请校验该方案是否存在违规问题。"
                 ),
             },
@@ -178,9 +179,13 @@ class RAGService:
 
         try:
             result = await self.llm.chat_json(messages, temperature=0.1)
+            # 确保返回值包含 passed 字段且默认安全（校验失败时应为 False）
+            if "passed" not in result:
+                result["passed"] = False
             return result
         except Exception as e:
-            return {"violations": [], "warnings": [f"约束校验失败: {str(e)}"], "passed": True}
+            # 校验异常时默认不通过，避免误放行违规方案
+            return {"violations": [{"regulation": "校验服务异常", "issue": str(e), "severity": "high"}], "warnings": [f"约束校验失败: {str(e)}"], "passed": False}
 
     def add_regulation(
         self,

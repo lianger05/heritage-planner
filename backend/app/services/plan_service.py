@@ -1,15 +1,16 @@
 """规划方案生成服务 - 核心AI引擎"""
 
 import json
-import logging
 import time
+from pathlib import Path
 from typing import Optional
 
+from loguru import logger
+
+from app.core.sanitize import sanitize_input, safe_json_for_prompt
 from app.services.llm_service import LLMService
 from app.services.rag_service import RAGService
 from app.services.kg_service import KnowledgeGraphService
-
-logger = logging.getLogger(__name__)
 
 # 系统提示词 - 规划专家角色
 PLANNER_SYSTEM_PROMPT = """你是一位资深的古建保护与文旅规划专家，拥有以下专业背景：
@@ -120,25 +121,17 @@ class PlanGeneratorService:
         ]
 
         if not self.llm.is_available:
-            return {
-                "error": "LLM未配置，请设置API Key后重试",
-                "heritage_name": heritage_name,
-                "kg_context": kg_context,
-                "regulations_found": len(regulations),
-                "cases_found": len(cases),
-                "_meta": {
-                    "generation_time": round(time.time() - start_time, 2),
-                    "llm_model": "none",
-                    "llm_provider": "none",
-                    "heritage_name": heritage_name,
-                },
-            }
-
-        plan_data = await self.llm.chat_json(
-            messages,
-            temperature=0.7,
-            max_tokens=4096,
-        )
+            logger.warning("LLM 不可用，使用模板方案作为 fallback")
+            plan_data = self._load_template(heritage_info, regulations, cases)
+            plan_data["fallback"] = True
+            plan_data["fallback_reason"] = "LLM API 未配置或不可用，已返回基于模板的预设方案"
+        else:
+            plan_data = await self.llm.chat_json(
+                messages,
+                temperature=0.7,
+                max_tokens=4096,
+            )
+            plan_data["fallback"] = False
 
         # Step 5: 约束校验
         try:
@@ -146,7 +139,8 @@ class PlanGeneratorService:
             plan_data["constraints_check"] = constraint_result
         except Exception as e:
             logger.warning(f"Constraint check failed: {e}")
-            plan_data["constraints_check"] = {"violations": [], "warnings": [], "passed": True}
+            # 校验异常时默认不通过，避免误放行违规方案
+            plan_data["constraints_check"] = {"violations": [{"regulation": "校验服务异常", "issue": str(e), "severity": "high"}], "warnings": [f"约束校验失败: {str(e)}"], "passed": False}
 
         elapsed = time.time() - start_time
         plan_data["_meta"] = {
@@ -171,14 +165,14 @@ class PlanGeneratorService:
         """组装用户提示"""
         sections = []
 
-        sections.append(f"## 古建信息\n{json.dumps(heritage_info, ensure_ascii=False, indent=2)}")
+        sections.append(f"## 古建信息\n{safe_json_for_prompt(heritage_info)}")
 
         if kg_context.get("protection_constraints"):
-            constraints_text = json.dumps(kg_context["protection_constraints"], ensure_ascii=False, indent=2)
+            constraints_text = safe_json_for_prompt(kg_context["protection_constraints"])
             sections.append(f"## 保护等级约束（来自知识图谱）\n{constraints_text}")
 
         if kg_context.get("similar_heritage"):
-            similar_text = json.dumps(kg_context["similar_heritage"], ensure_ascii=False, indent=2)
+            similar_text = safe_json_for_prompt(kg_context["similar_heritage"])
             sections.append(f"## 相似古建（来自知识图谱）\n{similar_text}")
 
         if regulations:
@@ -196,7 +190,7 @@ class PlanGeneratorService:
             sections.append(f"## 参考案例\n{case_text}")
 
         if user_requirements:
-            sections.append(f"## 用户需求\n{json.dumps(user_requirements, ensure_ascii=False, indent=2)}")
+            sections.append(f"## 用户需求\n{safe_json_for_prompt(user_requirements)}")
 
         sections.append(
             "\n请基于以上信息，生成一份完整的保护性开发方案。严格遵守输出JSON格式。"
@@ -211,20 +205,95 @@ class PlanGeneratorService:
         heritage_info: dict,
     ) -> dict:
         """根据用户反馈修改方案"""
+        # 净化用户反馈（防 Prompt 注入 + 长度截断）
+        safe_feedback = sanitize_input(feedback, context="plan_feedback")
+
         if not self.llm.is_available:
-            return {"error": "LLM未配置，请设置API Key后重试"}
+            logger.warning("LLM 不可用，无法执行 refine，返回原方案")
+            current_plan["fallback"] = True
+            current_plan["fallback_reason"] = "LLM API 不可用，无法执行方案修改。已返回修改前方案。"
+            return current_plan
 
         messages = [
             {"role": "system", "content": PLANNER_SYSTEM_PROMPT},
             {
                 "role": "user",
                 "content": (
-                    f"## 当前方案\n{json.dumps(current_plan, ensure_ascii=False, indent=2)}\n\n"
-                    f"## 古建信息\n{json.dumps(heritage_info, ensure_ascii=False, indent=2)}\n\n"
-                    f"## 用户修改意见\n{feedback}\n\n"
+                    f"## 当前方案\n{safe_json_for_prompt(current_plan)}\n\n"
+                    f"## 古建信息\n{safe_json_for_prompt(heritage_info)}\n\n"
+                    f"## 用户修改意见\n{safe_feedback}\n\n"
                     "请根据用户意见修改方案，保持JSON格式输出完整的修改后方案。"
                 ),
             },
         ]
 
         return await self.llm.chat_json(messages, temperature=0.5, max_tokens=4096)
+
+    def _load_template(
+        self,
+        heritage_info: dict,
+        regulations: list[dict] | None = None,
+        cases: list[dict] | None = None,
+    ) -> dict:
+        """加载模板方案（LLM 不可用时的 fallback）
+
+        根据古建的保护等级和建筑类型选择最匹配的模板。
+        模板采用继承机制：子类型模板通过 _extends 引用 default 模板，
+        仅覆盖差异字段。
+        """
+        templates_path = Path(__file__).parent.parent / "data" / "plan_templates.json"
+
+        try:
+            with open(templates_path, "r", encoding="utf-8") as f:
+                templates = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.error("无法加载模板文件: {}", e)
+            return {"error": "模板文件加载失败", "detail": str(e)}
+
+        default = templates.get("default", {})
+
+        # 按保护等级匹配模板
+        protection_level = heritage_info.get("protection_level", "")
+        building_type = heritage_info.get("building_type", "")
+
+        # 深合并模板（子模板覆盖父模板的对应字段）
+        plan = self._deep_merge({}, default)
+
+        # 应用保护等级专属模板
+        if protection_level and protection_level in templates:
+            plan = self._deep_merge(plan, templates[protection_level])
+
+        # 应用建筑类型专属模板
+        if building_type and building_type in templates:
+            plan = self._deep_merge(plan, templates[building_type])
+
+        # 如果检索到了法规和案例，注入实际数据
+        if regulations:
+            refs = plan.get("constraints_check", {}).get("regulations_referenced", [])
+            for r in regulations[:3]:
+                title = r.get("title", "")
+                if title and title not in refs:
+                    refs.append(title)
+            plan.setdefault("constraints_check", {})["regulations_referenced"] = refs
+
+        if cases:
+            plan.setdefault("constraints_check", {})["similar_cases"] = [
+                f"{c.get('name', '')} ({c.get('location', '')})" for c in cases[:3] if c.get("name")
+            ]
+
+        return plan
+
+    def _deep_merge(self, base: dict, override: dict) -> dict:
+        """深度合并两个字典，override 覆盖 base 的对应字段。
+
+        跳过 _extends、_description 等元数据字段。
+        """
+        result = {k: v for k, v in base.items()}
+        for key, value in override.items():
+            if key.startswith("_"):
+                continue
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                result[key] = self._deep_merge(result[key], value)
+            else:
+                result[key] = value
+        return result

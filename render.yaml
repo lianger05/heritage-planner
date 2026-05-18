@@ -16,7 +16,7 @@ services:
       - key: APP_DEBUG
         value: "false"
       - key: CORS_ORIGINS
-        value: "*"
+        value: https://heritage-planner-seven.vercel.app
       - key: DATABASE_URL
         value: sqlite+aiosqlite:///./data/heritage_planner.db
       - key: DATABASE_URL_SYNC
@@ -31,4 +31,6 @@ services:
         value: "false"
       - key: LLM_CACHE_ENABLED
         value: "false"
-      # DEEPSEEK_API_KEY 在 Render Dashboard → Environment 中手动设置
+      # 以下密钥必须在 Render Dashboard → Environment 中手动设置：
+      # DEEPSEEK_API_KEY — LLM 主供应商
+      # API_KEY — 写操作认证密钥（设置后前端需在请求头带 X-API-Key）

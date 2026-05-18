@@ -3,11 +3,13 @@
 import json
 import time
 
-from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.rate_limit import limiter
 from app.models.heritage import Heritage, Plan
 from app.schemas.heritage import PlanCreate, PlanResponse
 from app.services.plan_service import PlanGeneratorService
@@ -16,7 +18,9 @@ router = APIRouter()
 
 
 @router.post("/generate", response_model=PlanResponse, summary="AI生成规划方案")
+@limiter.limit("5/minute")
 async def generate_plan(
+    request: Request,
     data: PlanCreate,
     db: AsyncSession = Depends(get_db),
 ):
@@ -93,13 +97,21 @@ async def list_plans_by_heritage(
     return result.scalars().all()
 
 
+class RefineRequest(BaseModel):
+    """方案修改请求"""
+    feedback: str = Field(..., min_length=1, max_length=2000, description="用户反馈")
+
+
 @router.post("/{plan_id}/refine", response_model=PlanResponse, summary="AI修改方案")
+@limiter.limit("10/minute")
 async def refine_plan(
+    request: Request,
     plan_id: int,
-    feedback: str,
+    data: RefineRequest,
     db: AsyncSession = Depends(get_db),
 ):
     """根据用户反馈修改方案"""
+    feedback = data.feedback
     result = await db.execute(select(Plan).where(Plan.id == plan_id))
     plan = result.scalar_one_or_none()
     if not plan:
