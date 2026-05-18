@@ -16,7 +16,7 @@ from app.schemas.heritage import (
 router = APIRouter()
 
 
-@router.get("/", response_model=HeritageListResponse, summary="获取古建列表")
+@router.get("", response_model=HeritageListResponse, summary="获取古建列表")
 async def list_heritage(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -67,7 +67,7 @@ async def get_heritage(heritage_id: int, db: AsyncSession = Depends(get_db)):
     return heritage
 
 
-@router.post("/", response_model=HeritageResponse, summary="创建古建信息")
+@router.post("", response_model=HeritageResponse, summary="创建古建信息")
 async def create_heritage(
     data: HeritageCreate,
     db: AsyncSession = Depends(get_db),

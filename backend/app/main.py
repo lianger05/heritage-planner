@@ -84,6 +84,7 @@ def create_app() -> FastAPI:
         docs_url="/api/docs",
         redoc_url="/api/redoc",
         openapi_url="/api/openapi.json",
+        redirect_slashes=False,  # 禁用 307 重定向，避免 Vercel rewrites 代理时 Location 指向 onrender.com
     )
     setup_logging(app)
 

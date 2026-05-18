@@ -147,7 +147,7 @@ export async function getHeritageList(params?: {
   building_type?: string;
   keyword?: string;
 }): Promise<HeritageListResponse> {
-  const { data } = await api.get("/heritage/", { params });
+  const { data } = await api.get("/heritage", { params });
   return data;
 }
 
@@ -157,7 +157,7 @@ export async function getHeritageDetail(id: number): Promise<HeritageItem> {
 }
 
 export async function createHeritage(payload: Partial<HeritageItem>): Promise<HeritageItem> {
-  const { data } = await api.post("/heritage/", payload);
+  const { data } = await api.post("/heritage", payload);
   return data;
 }
 
