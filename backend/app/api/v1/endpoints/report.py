@@ -2,6 +2,7 @@
 
 import json
 from datetime import datetime
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import PlainTextResponse
@@ -67,32 +68,43 @@ async def download_report(
     db: AsyncSession = Depends(get_db),
 ):
     """下载已生成的报告文件"""
-    # 获取方案
-    result = await db.execute(select(Plan).where(Plan.id == plan_id))
-    plan = result.scalar_one_or_none()
-    if not plan:
-        raise HTTPException(status_code=404, detail="方案未找到")
+    import logging
+    logger = logging.getLogger(__name__)
 
-    # 获取古建信息
-    heritage_result = await db.execute(select(Heritage).where(Heritage.id == plan.heritage_id))
-    heritage = heritage_result.scalar_one_or_none()
+    try:
+        # 获取方案
+        result = await db.execute(select(Plan).where(Plan.id == plan_id))
+        plan = result.scalar_one_or_none()
+        if not plan:
+            raise HTTPException(status_code=404, detail="方案未找到")
 
-    if format == "markdown":
-        content = _generate_markdown(plan, heritage)
-        safe_name = heritage.name if heritage else "unknown"
-        filename = f"plan_{plan.id}_{safe_name}.md"
-        return PlainTextResponse(
-            content=content,
-            media_type="text/markdown; charset=utf-8",
-            headers={
-                "Content-Disposition": f'attachment; filename="{filename}"',
-            },
-        )
-    else:
-        raise HTTPException(
-            status_code=400,
-            detail=f"暂不支持 {format} 格式导出，请使用 markdown 格式",
-        )
+        # 获取古建信息
+        heritage_result = await db.execute(select(Heritage).where(Heritage.id == plan.heritage_id))
+        heritage = heritage_result.scalar_one_or_none()
+
+        if format == "markdown":
+            content = _generate_markdown(plan, heritage)
+            safe_name = heritage.name if heritage else "unknown"
+            filename = f"plan_{plan.id}_{safe_name}.md"
+            # RFC 5987 编码中文文件名
+            encoded_filename = quote(filename)
+            return PlainTextResponse(
+                content=content,
+                media_type="text/markdown; charset=utf-8",
+                headers={
+                    "Content-Disposition": f"attachment; filename=\"{encoded_filename}\"; filename*=UTF-8''{encoded_filename}",
+                },
+            )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"暂不支持 {format} 格式导出，请使用 markdown 格式",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Report download failed for plan_id=%s: %s", plan_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"报告生成失败: {type(e).__name__}: {str(e)[:200]}")
 
 
 def _format_json_section(data: dict | list | None, indent: int = 0) -> str:
