@@ -8,7 +8,8 @@
 import os
 import logging
 
-from fastapi import Request, HTTPException
+from fastapi import Request
+from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -45,19 +46,21 @@ async def api_key_middleware(request: Request, call_next):
         return await call_next(request)
 
     # 写操作 → 强制校验
+    # 注意：在 Starlette 中间件中 raise HTTPException 会被全局异常处理器捕获并返回 500，
+    # 因此必须直接返回 JSONResponse 来正确返回 401
     client_key = request.headers.get("X-API-Key")
     if not client_key:
         logger.warning("Missing X-API-Key header on %s %s", request.method, request.url.path)
-        raise HTTPException(
+        return JSONResponse(
             status_code=401,
-            detail="Missing X-API-Key header. 请在请求头中提供有效的 API Key。",
+            content={"detail": "Missing X-API-Key header. 请在请求头中提供有效的 API Key。"},
         )
 
     if client_key != api_key:
         logger.warning("Invalid X-API-Key on %s %s", request.method, request.url.path)
-        raise HTTPException(
+        return JSONResponse(
             status_code=401,
-            detail="Invalid API key. 提供的 API Key 无效。",
+            content={"detail": "Invalid API key. 提供的 API Key 无效。"},
         )
 
     return await call_next(request)
